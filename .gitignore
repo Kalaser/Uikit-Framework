@@ -1,0 +1,48 @@
+# ── Build directories (CMake) ──────────────────────────────────────────────
+/build*/
+/out/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+CTestCostData.txt
+DartConfiguration.tcl
+Makefile
+*.make
+compile_commands.json
+
+# ── Compiled artifacts ─────────────────────────────────────────────────────
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dll
+*.dylib
+*.exe
+*.exe.manifest
+*.out
+*.class
+*.gcda
+*.gcno
+
+# ── IDE / editor ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+.vs/
+*.suo
+*.user
+*.swp
+*~
+.project
+.cproject
+.settings/
+
+# ── OS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Project-local data (workspace memory, not source) ───────────────────────
+.workbuddy/
