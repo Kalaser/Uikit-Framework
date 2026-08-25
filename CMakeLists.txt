@@ -90,6 +90,38 @@ endif()
 
 # ── Launcher app (Android-style desktop on Windows GDI) ──────────────────────
 if(WIN32)
+    # XML page compiler (route B): when Python is available the build
+    # auto-regenerates the *_xml.c/h from res/pages/*.xml whenever the XML
+    # changes (edit XML -> just `make`). Without Python, the checked-in
+    # generated files are used as-is (re-run tools/xml2c.py manually).
+    set(UIKIT_XML2C ${CMAKE_SOURCE_DIR}/tools/xml2c.py)
+    set(UIKIT_XML_PAGES
+        ${CMAKE_SOURCE_DIR}/apps/launcher/res/pages/settings.xml
+        ${CMAKE_SOURCE_DIR}/apps/launcher/res/pages/terminal.xml
+    )
+    set(UIKIT_XML_GENERATED)
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        foreach(xml ${UIKIT_XML_PAGES})
+            get_filename_component(xml_name ${xml} NAME_WE)
+            set(xml_out_c ${CMAKE_SOURCE_DIR}/apps/launcher/apps/${xml_name}_xml/${xml_name}_xml.c)
+            set(xml_out_h ${CMAKE_SOURCE_DIR}/apps/launcher/apps/${xml_name}_xml/${xml_name}_xml.h)
+            add_custom_command(
+                OUTPUT ${xml_out_c} ${xml_out_h}
+                COMMAND ${Python3_EXECUTABLE} ${UIKIT_XML2C} ${xml} ${xml_out_c} ${xml_out_h}
+                DEPENDS ${xml} ${UIKIT_XML2C}
+                COMMENT "xml2c: ${xml_name}.xml -> ${xml_name}_xml.c/h"
+            )
+            list(APPEND UIKIT_XML_GENERATED ${xml_out_c})
+        endforeach()
+        add_custom_target(xml_pages DEPENDS ${UIKIT_XML_GENERATED})
+    endif()
+    if(NOT UIKIT_XML_GENERATED)
+        # No Python available: use the checked-in generated sources as-is.
+        set(UIKIT_XML_GENERATED
+            ${CMAKE_SOURCE_DIR}/apps/launcher/apps/settings_xml/settings_xml.c)
+    endif()
+
     add_executable(UIKitLauncher
         apps/launcher/launcher.cpp
         apps/launcher/app_common.h
@@ -110,7 +142,17 @@ if(WIN32)
         apps/launcher/apps/store/store_app.cpp
         apps/launcher/apps/video/video_app.cpp
         apps/launcher/apps/settings/settings_app.cpp
+        ${UIKIT_XML_GENERATED}
+        apps/launcher/apps/settings_xml/settings_xml_app.cpp
+        apps/launcher/apps/terminal_xml/terminal_app.cpp
+        apps/launcher/system/drawer.cpp
+        apps/launcher/system/recents.cpp
+        apps/launcher/system/quicksettings.cpp
+        apps/launcher/system/app_menu.cpp
     )
+    if(TARGET xml_pages)
+        add_dependencies(UIKitLauncher xml_pages)
+    endif()
     target_link_libraries(UIKitLauncher PRIVATE uikit lvgl user32 gdi32)
 endif()
 

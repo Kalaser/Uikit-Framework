@@ -7,6 +7,7 @@
 #define LAUNCHER_APP_COMMON_H
 
 #include "UIKit.hpp"
+#include "launcher_theme.h"
 #include <cstdio>
 #include <memory>
 
@@ -39,11 +40,16 @@ inline std::unique_ptr<uikit::UIButton> make_back(uikit::UIViewController *self,
 {
     auto btn = std::make_unique<uikit::UIButton>(&parent);
     btn->setTitle(LV_SYMBOL_LEFT " Back");
-    btn->setTitleColor(0xFFFFFF);
-    btn->setBackgroundColor(0x000000);
-    btn->setOpacity(200);
-    btn->setCornerRadius(22);
-    btn->setFrame(20, 60, 130, 44);
+    btn->setTitleColor(launcher_theme::kTextHi);
+    btn->setBackgroundColor(launcher_theme::kSurface);
+    /* Radius 16 < h/2 (44): a half-pill radius hangs LVGL 8.3 redraws. */
+    btn->setCornerRadius(launcher_theme::kRadiusCard);
+    launcher_theme::style_pressed(*btn, launcher_theme::kSurfaceAlt);
+    btn->setFrame(launcher_theme::kSpaceLg, 56, 130, 44);
+    lv_obj_t *lbl = lv_obj_get_child(::UIView_native(btn->native()), 0);
+    if (lbl) {
+        lv_obj_set_style_text_font(lbl, launcher_theme::kFontCap, 0);
+    }
     btn->onClick([self, nav](uikit::UIButton *) {
         if (nav) {
             nav->pop();
@@ -58,9 +64,9 @@ inline std::unique_ptr<uikit::UILabel> make_title(uikit::UIView &parent, const c
 {
     auto lbl = std::make_unique<uikit::UILabel>(&parent);
     lbl->setText(text);
-    lbl->setColor(0xFFFFFF);
+    lbl->setColor(launcher_theme::kTextHi);
     lbl->setAlignment(1);
-    lbl->setFont(&lv_font_montserrat_28);
+    lbl->setFont(launcher_theme::kFontH1);
     const int w = lv_disp_get_hor_res(NULL);
     lbl->setFrame(0, 30, w, 40);
     return lbl;

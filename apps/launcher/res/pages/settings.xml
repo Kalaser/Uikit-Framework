@@ -1,0 +1,88 @@
+<screen name="settings">
+
+    <view
+        width="100%"
+        height="100%"
+        bg_color="#F7F7FA"
+        scrollable="true">
+
+        <app_bar
+            title="Settings"
+            subtitle="Terminal preferences"
+        />
+
+        <section_header
+            y="120"
+            text="APPEARANCE"
+        />
+
+        <setting_item
+            y="150"
+            title="Theme"
+            value="System"
+        />
+
+        <setting_item
+            y="202"
+            title="Accent Color"
+            value="Blue"
+        />
+
+        <setting_item
+            y="254"
+            title="Font Size"
+            value="14 pt"
+        />
+
+        <setting_item
+            y="306"
+            title="Terminal Font"
+            value="JetBrains Mono"
+        />
+
+        <section_header
+            y="380"
+            text="BEHAVIOR"
+        />
+
+        <setting_item
+            y="410"
+            title="Confirm Destructive Commands"
+            value="On"
+            type="switch"
+        />
+
+        <setting_item
+            y="462"
+            title="Auto Reconnect"
+            value="On"
+            type="switch"
+        />
+
+        <setting_item
+            y="514"
+            title="Keep Screen Awake"
+            value="Off"
+            type="switch"
+        />
+
+        <section_header
+            y="588"
+            text="CONNECTION"
+        />
+
+        <setting_item
+            y="618"
+            title="Default Transport"
+            value="Wi-Fi"
+        />
+
+        <setting_item
+            y="670"
+            title="Connection Timeout"
+            value="5 sec"
+        />
+
+    </view>
+
+</screen>

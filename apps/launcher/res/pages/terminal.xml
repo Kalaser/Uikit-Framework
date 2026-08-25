@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  terminal.xml — terminal-preferences style page (user schema).
+  Demonstrates: lv_obj container with padding, terminal text lines,
+  action_card grid, device_card list, tab_bar bottom navigation.
+-->
+<screen name="terminal" bg="#F7F7FA">
+
+    <view width="100%" height="100%" bg_color="#F7F7FA">
+
+        <!-- App Bar -->
+        <app_bar title="Terminal" subtitle="Local session"/>
+
+        <!-- Terminal Preview -->
+        <lv_obj
+            name="terminal_card"
+            x="20" y="120"
+            width="353" height="240"
+            bg_color="#0E0E11" radius="20" pad_all="18">
+
+            <lv_label x="0" y="0" width="317"
+                      text="$ ssh device@192.168.1.24"
+                      text_font="font_terminal" text_color="#C7C7CE"/>
+
+            <lv_label x="0" y="28" width="317"
+                      text="Connected to factory device"
+                      text_font="font_terminal" text_color="#64D47F"/>
+
+            <lv_label x="0" y="56" width="317"
+                      text="firmware  v2.4.18"
+                      text_font="font_terminal" text_color="#C7C7CE"/>
+
+            <lv_label x="0" y="82" width="317"
+                      text="wifi      192.168.1.24"
+                      text_font="font_terminal" text_color="#C7C7CE"/>
+
+            <lv_label x="0" y="108" width="317"
+                      text="battery   87%"
+                      text_font="font_terminal" text_color="#C7C7CE"/>
+
+            <lv_label name="cursor" x="0" y="150"
+                      text="▌"
+                      text_font="font_terminal" text_color="#5AC8FA"/>
+        </lv_obj>
+
+        <!-- Quick Actions -->
+        <lv_label x="20" y="390" text="Quick Actions"
+                  text_font="font_h2" text_color="#141418"/>
+
+        <action_card id="actConnect" x="20" y="430" icon="⌁" title="Connect"/>
+        <action_card id="actScan"    x="140" y="430" icon="⌕" title="Scan"/>
+        <action_card id="actReboot"  x="260" y="430" icon="↻" title="Reboot"/>
+
+        <!-- Recent -->
+        <lv_label x="20" y="545" text="Recent Sessions"
+                  text_font="font_h2" text_color="#141418"/>
+
+        <device_card x="20" y="580"
+                     device_name="Factory Glass #24"
+                     device_connection="Connected · 2 min ago"/>
+
+        <device_card x="20" y="665"
+                     device_name="Debug Board #07"
+                     device_connection="Disconnected · 1 hr ago"/>
+
+        <!-- Bottom navigation -->
+        <tab_bar active="terminal"/>
+
+    </view>
+
+</screen>
