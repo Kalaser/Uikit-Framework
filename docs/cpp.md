@@ -58,6 +58,15 @@ int main(void) {
 | `uikit::UIViewController` | `::UIViewController` | virtual lifecycle, `getView`, `setTitle` |
 | `uikit::UINavigationController` | `::UINavigationController` | `push`, `pop`, `popToRoot`, `top`, `at` |
 
+## Application / Activity structure
+
+For Android-style apps, treat each page as a `uikit::UIViewController` Activity
+and keep the process/app lifecycle in a small application object. See
+`docs/app-lifecycle.md` for a complete launcher-style skeleton with
+`Application.onCreate/onForeground/onBackground/onDestroy`, page
+`onCreate/onStart/onResume/onPause/onStop/onDestroy`, and ownership rules for
+`startActivity()` / `finish()`.
+
 ## Lifecycle (virtual dispatch)
 
 The six C callbacks map to virtual functions through static thunks
