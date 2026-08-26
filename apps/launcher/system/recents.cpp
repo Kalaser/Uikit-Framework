@@ -55,7 +55,7 @@ public:
                 lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_LEFT, 0);
             }
             card->onClick([this, app](uikit::UIButton *) {
-                if (m_nav) startActivity(app->create(m_nav));
+                if (m_nav) startActivity(launcher::Intent(app->id));
             });
             m_cards.push_back(std::move(card));
             y += 76;

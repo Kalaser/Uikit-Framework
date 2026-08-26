@@ -7,6 +7,7 @@
 #define LAUNCHER_APP_COMMON_H
 
 #include "UIKit.hpp"
+#include "activity_registry.h"
 #include "launcher_theme.h"
 #include <cstdio>
 #include <memory>
@@ -22,10 +23,22 @@ namespace launcher {
 class Activity : public uikit::UIViewController {
 public:
     void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
+    void setActivityRegistry(const ActivityRegistry *registry) { m_registry = registry; }
+
+    /** Resolve an explicit Intent through Application's registered Activities. */
+    void startActivity(const Intent &intent)
+    {
+        if (m_nav && m_registry) {
+            startActivity(m_registry->create(intent, m_nav));
+        }
+    }
 
     void startActivity(uikit::UIViewController *controller)
     {
         if (m_nav && controller) {
+            if (auto *activity = dynamic_cast<Activity *>(controller)) {
+                activity->setActivityRegistry(m_registry);
+            }
             m_nav->push(controller);
         }
     }
@@ -39,6 +52,7 @@ protected:
     uikit::UINavigationController *navigationController() const { return m_nav; }
 
     uikit::UINavigationController *m_nav = nullptr;
+    const ActivityRegistry *m_registry = nullptr;
 };
 
 /** Print a lifecycle log line. */

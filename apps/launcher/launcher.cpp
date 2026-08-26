@@ -65,7 +65,7 @@ public:
     void launch_app(const AppDescriptor &app)
     {
         if (!m_nav) return;
-        startActivity(app.create(m_nav));
+        startActivity(launcher::Intent(app.id));
         auto it = std::find(m_recents.begin(), m_recents.end(), &app);
         if (it != m_recents.end()) {
             m_recents.erase(it);
@@ -391,7 +391,9 @@ public:
     bool onCreate()
     {
         launcher::vc_log("LauncherApplication", "onCreate");
+        launcher_register_app_activities(m_registry);
         m_launcher = new LauncherViewController();
+        m_launcher->setActivityRegistry(&m_registry);
         m_nav = std::make_unique<uikit::UINavigationController>(m_launcher);
         if (!m_nav->c_ptr()) {
             delete m_launcher;
@@ -426,6 +428,7 @@ public:
 private:
     LauncherViewController *m_launcher = nullptr;
     std::unique_ptr<uikit::UINavigationController> m_nav;
+    launcher::ActivityRegistry m_registry;
 };
 
 /* ══ Main ─────────────────────────────────────────────────────────────────── */

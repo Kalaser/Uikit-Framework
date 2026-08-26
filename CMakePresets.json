@@ -1,0 +1,25 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "launcher-release",
+      "displayName": "UIKit Launcher Release",
+      "description": "Build the Windows GDI launcher and prepare a ZIP package.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/launcher-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "UIKIT_BUILD_DEMO": "OFF",
+        "UIKIT_BUILD_EXAMPLES": "OFF",
+        "UIKIT_BUILD_TESTS": "OFF",
+        "UIKIT_BUILD_LAUNCHER": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "launcher-release",
+      "configurePreset": "launcher-release"
+    }
+  ]
+}

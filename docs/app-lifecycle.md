@@ -157,6 +157,8 @@ private:
 class LauncherApplication {
 public:
     void onCreate() {
+        // Register named Activity targets before any Intent is dispatched.
+        launcher_register_app_activities(mRegistry);
         mNav.reset(new uikit::UINavigationController(new HomeActivity(&mNavRaw)));
         mNavRaw = mNav.get();
     }
@@ -172,8 +174,26 @@ public:
 private:
     uikit::UINavigationController *mNavRaw = nullptr;
     std::unique_ptr<uikit::UINavigationController> mNav;
+    launcher::ActivityRegistry mRegistry;
 };
 ```
+
+## Explicit Intent routing in the launcher
+
+`apps/launcher` keeps the controller stack provided by
+`UINavigationController`, but routes launchable apps by a stable Activity id.
+`LauncherApplication::onCreate()` registers the `AppDescriptor` factories once;
+home-screen tiles, the app drawer, recents, and the long-press menu then launch
+the id rather than calling another page's factory directly:
+
+```cpp
+startActivity(launcher::Intent("music"));
+```
+
+The `Activity` base resolves the Intent through the application-owned
+`ActivityRegistry`, sets the navigation stack and registry on the resulting
+page, and pushes it.  This preserves the UI tree and lifecycle ownership rules
+while keeping individual pages independent of app implementation files.
 
 ## Ownership rules for pages
 

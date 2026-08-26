@@ -16,6 +16,7 @@
 #define LAUNCHER_APP_FACTORY_H
 
 #include "UIKit.hpp"
+#include "activity_registry.h"
 #include <vector>
 
 /** App metadata — Android "package" equivalent. */
@@ -50,6 +51,9 @@ extern const AppDescriptor kLauncherApps[15];   /**< full installed-app list */
 extern const AppDescriptor *kLauncherPage1[6];  /**< home page 1 (pointers) */
 extern const AppDescriptor *kLauncherPage2[8];  /**< home page 2 (pointers) */
 extern const AppDescriptor *kLauncherDock[4];   /**< dock shortcuts */
+
+/** Register every launchable application Activity with the Application. */
+void launcher_register_app_activities(launcher::ActivityRegistry &registry);
 
 /* ── System UI factories (apps/launcher/system/) ──────────────────────────── */
 
