@@ -13,10 +13,8 @@
 #include <cstdio>
 #include <memory>
 
-class TerminalApp : public uikit::UIViewController {
+class TerminalApp : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
-
     void onCreate() override {
         launcher::vc_log("Terminal", "onCreate");
         auto v = getView();
@@ -57,16 +55,14 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     TerminalXmlIds m_ids;
 
     static void back_thunk(UIEvent *ev, void *user_data)
     {
         (void)ev;
         auto *self = static_cast<TerminalApp *>(user_data);
-        if (self->m_nav) {
-            self->m_nav->pop();
-            launcher::schedule_delete(self);
+        if (self && self->m_nav) {
+            launcher::schedule_delete(self->finish());
         }
     }
 

@@ -17,10 +17,8 @@
 #include <cstdio>
 #include <memory>
 
-class SettingsXmlApp : public uikit::UIViewController {
+class SettingsXmlApp : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
-
     void onCreate() override {
         launcher::vc_log("SettingsXml", "onCreate");
         auto v = getView();
@@ -60,7 +58,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     UIView *m_root = nullptr;
     SettingsXmlIds m_ids;
 
@@ -68,9 +65,8 @@ private:
     {
         (void)ev;
         auto *self = static_cast<SettingsXmlApp *>(user_data);
-        if (self->m_nav) {
-            self->m_nav->pop();
-            launcher::schedule_delete(self);
+        if (self && self->m_nav) {
+            launcher::schedule_delete(self->finish());
         }
     }
 

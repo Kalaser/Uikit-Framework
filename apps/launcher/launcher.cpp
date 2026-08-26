@@ -57,17 +57,15 @@ static void tile_long_press_thunk(UIEvent *ev, void *user_data);
 
 /* ══ Launcher home screen ─────────────────────────────────────────────────── */
 
-class LauncherViewController : public uikit::UIViewController {
+class LauncherViewController : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
-
     /* ── App launch & system entries (Android/iOS style) ────────────────── */
 
     /** Launch an app and record it in the recent-apps list. */
     void launch_app(const AppDescriptor &app)
     {
         if (!m_nav) return;
-        m_nav->push(app.create(m_nav));
+        startActivity(app.create(m_nav));
         auto it = std::find(m_recents.begin(), m_recents.end(), &app);
         if (it != m_recents.end()) {
             m_recents.erase(it);
@@ -81,22 +79,22 @@ public:
 
     void open_app_menu(const AppDescriptor &app)
     {
-        if (m_nav) m_nav->push(launcher_app_menu_create(m_nav, app));
+        if (m_nav) startActivity(launcher_app_menu_create(m_nav, app));
     }
 
     void open_recents()
     {
-        if (m_nav) m_nav->push(launcher_recents_create(m_nav, m_recents));
+        if (m_nav) startActivity(launcher_recents_create(m_nav, m_recents));
     }
 
     void open_drawer()
     {
-        if (m_nav) m_nav->push(launcher_drawer_create(m_nav));
+        if (m_nav) startActivity(launcher_drawer_create(m_nav));
     }
 
     void open_quicksettings()
     {
-        if (m_nav) m_nav->push(launcher_quicksettings_create(m_nav));
+        if (m_nav) startActivity(launcher_quicksettings_create(m_nav));
     }
 
     /** Most-recent-first list (exposed for the recents page & self-check). */
@@ -158,7 +156,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     lv_timer_t *m_clock_timer = nullptr;
 
     std::unique_ptr<uikit::UILabel> m_time;
@@ -389,6 +386,48 @@ public:
     }
 };
 
+class LauncherApplication {
+public:
+    bool onCreate()
+    {
+        launcher::vc_log("LauncherApplication", "onCreate");
+        m_launcher = new LauncherViewController();
+        m_nav = std::make_unique<uikit::UINavigationController>(m_launcher);
+        if (!m_nav->c_ptr()) {
+            delete m_launcher;
+            m_launcher = nullptr;
+            m_nav.reset();
+            return false;
+        }
+        m_launcher->setNav(m_nav.get());
+        return true;
+    }
+
+    void onForeground()
+    {
+        launcher::vc_log("LauncherApplication", "onForeground");
+    }
+
+    void onBackground()
+    {
+        launcher::vc_log("LauncherApplication", "onBackground");
+    }
+
+    void onDestroy()
+    {
+        launcher::vc_log("LauncherApplication", "onDestroy");
+        m_launcher = nullptr;
+        m_nav.reset();
+    }
+
+    uikit::UINavigationController *nav() const { return m_nav.get(); }
+    LauncherViewController *launcher() const { return m_launcher; }
+
+private:
+    LauncherViewController *m_launcher = nullptr;
+    std::unique_ptr<uikit::UINavigationController> m_nav;
+};
+
 /* ══ Main ─────────────────────────────────────────────────────────────────── */
 
 /** Long-press on an app tile opens its context menu (defined after the
@@ -433,13 +472,20 @@ int main(int argc, char **argv)
     theme->primary_color = launcher_theme::kAccent;
     theme->background_color = launcher_theme::kWallpaper;
 
-    auto *launcher = new LauncherViewController();
-    uikit::UINavigationController nav(launcher);
-    launcher->setNav(&nav);
+    LauncherApplication app;
+    if (!app.onCreate()) {
+        std::printf("LauncherApplication onCreate failed\n");
+        WinDriver_deinit();
+        return 1;
+    }
+    app.onForeground();
+
+    uikit::UINavigationController *nav = app.nav();
+    LauncherViewController *launcher = app.launcher();
 
     /* Responsive window: on resize, grow the nav surface + re-layout the
      * launcher home screen. */
-    static uikit::UINavigationController *s_nav = &nav;
+    static uikit::UINavigationController *s_nav = nav;
     static LauncherViewController *s_launcher = launcher;
     WinDriver_set_resize_callback([](int w, int h) {
         if (s_nav) {
@@ -466,7 +512,7 @@ int main(int argc, char **argv)
                     lv_tick_inc(16);
                     lv_timer_handler();
                 }
-                uikit::UIViewController *popped = nav.pop();
+                uikit::UIViewController *popped = nav->pop();
                 if (popped) {
                     popped->destroy();
                     delete popped;
@@ -476,21 +522,21 @@ int main(int argc, char **argv)
         /* System UI pages (drawer / recents / quick settings / menu) */
         auto run_page = [&](const char *name, uikit::UIViewController *vc) {
             std::printf("== system: %s ==\n", name);
-            nav.push(vc);
+            nav->push(vc);
             for (int f = 0; f < 6; f++) {
                 lv_tick_inc(16);
                 lv_timer_handler();
             }
-            uikit::UIViewController *popped = nav.pop();
+            uikit::UIViewController *popped = nav->pop();
             if (popped) {
                 popped->destroy();
                 delete popped;
             }
         };
-        run_page("drawer", launcher_drawer_create(&nav));
-        run_page("recents", launcher_recents_create(&nav, launcher->recents()));
-        run_page("quicksettings", launcher_quicksettings_create(&nav));
-        run_page("app_menu", launcher_app_menu_create(&nav, kLauncherApps[0]));
+        run_page("drawer", launcher_drawer_create(nav));
+        run_page("recents", launcher_recents_create(nav, launcher->recents()));
+        run_page("quicksettings", launcher_quicksettings_create(nav));
+        run_page("app_menu", launcher_app_menu_create(nav, kLauncherApps[0]));
         std::printf("app self-check: all apps OK\n");
 
         lv_mem_monitor_t mon;
@@ -500,6 +546,8 @@ int main(int argc, char **argv)
                     (unsigned)mon.free_size, (unsigned)mon.max_used,
                     (unsigned)mon.used_cnt, (unsigned)mon.frag_pct);
 
+        app.onBackground();
+        app.onDestroy();
         WinDriver_deinit();
         return 0;
     }
@@ -514,6 +562,7 @@ int main(int argc, char **argv)
                 (unsigned)mon.free_size, (unsigned)mon.max_used,
                 (unsigned)mon.used_cnt, (unsigned)mon.frag_pct);
 
-    /* nav destructor tears down the launcher (onDestroy → delete) */
+    app.onBackground();
+    app.onDestroy();
     return 0;
 }

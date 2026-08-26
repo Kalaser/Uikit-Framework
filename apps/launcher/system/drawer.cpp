@@ -7,10 +7,8 @@
 #include "../app_factory.h"
 #include <cstring>
 
-class DrawerViewController : public uikit::UIViewController {
+class DrawerViewController : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
-
     void onCreate() override {
         launcher::vc_log("Drawer", "onCreate");
         auto v = getView();
@@ -61,7 +59,7 @@ public:
                     lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_LEFT, 0);
                 }
                 row->onClick([this, &app](uikit::UIButton *) {
-                    if (m_nav) m_nav->push(app.create(m_nav));
+                    if (m_nav) startActivity(app.create(m_nav));
                 });
                 m_rows.push_back(std::move(row));
                 y += 60;
@@ -79,7 +77,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     std::unique_ptr<uikit::UILabel> m_title;
     std::unique_ptr<uikit::UIButton> m_back;
     std::unique_ptr<uikit::UIScrollView> m_scroll;

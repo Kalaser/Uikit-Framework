@@ -11,8 +11,10 @@
  * Every UIKit component maps one-to-one onto an LVGL primitive.
  *
  * This demo registers a headless (no-op flush) display so it runs on any
- * host machine. On real hardware, replace setup_display() with your
- * platform's display/input driver initialization.
+ * host machine. It also uses UIViewController + UINavigationController so
+ * the simple demo follows the same Activity/page lifecycle as real apps.
+ * On real hardware, replace setup_display() with your platform's
+ * display/input driver initialization.
  */
 
 #include "UIKit.h"
@@ -69,65 +71,111 @@ static void on_slider_change(UIEvent *event, void *user_data)
     }
 }
 
-/* ── Build the demo UI ────────────────────────────────────────────────────── */
+/* ── Demo activity/page ───────────────────────────────────────────────────── */
 
-static UILabel *g_status;
+typedef struct DemoActivity {
+    UIViewController base;
+    UILabel *title;
+    UIButton *button;
+    UILabel *status;
+    UISwitch *sw;
+    UISlider *slider;
+    UIProgressView *progress;
+    UIPageControl *pages;
+    UITextField *field;
+} DemoActivity;
 
-static void app_ui_init(void)
+static UIView *demo_load_view(UIViewController *controller)
 {
-    UIView *root = UIViewRoot_create();
+    (void)controller;
+    return UIViewRoot_create();
+}
+
+static void demo_on_create(UIViewController *controller)
+{
+    DemoActivity *activity = (DemoActivity *)controller;
+    UIView *root = UIViewController_get_view(controller);
     if (!root) {
         return;
     }
+
     UIView_set_background_color(root, 0xF2F2F7);
 
-    /* Title */
-    UILabel *title = UILabel_create(root);
-    UILabel_set_text(title, "UIKit Demo");
-    UILabel_set_color(title, 0x000000);
-    UILabel_set_alignment(title, 1);
-    UIView_set_frame(&title->base, 0, 10, 320, 30);
+    activity->title = UILabel_create(root);
+    UILabel_set_text(activity->title, "UIKit Demo");
+    UILabel_set_color(activity->title, 0x000000);
+    UILabel_set_alignment(activity->title, 1);
+    UIView_set_frame(&activity->title->base, 0, 10, 320, 30);
 
-    /* Button */
-    UIButton *button = UIButton_create(root);
-    UIButton_set_title(button, "Tap me");
-    UIButton_set_title_color(button, 0xFFFFFF);
-    UIButton_set_background_color(button, 0x007AFF);
-    UIView_set_corner_radius(&button->base, 8);
-    UIView_set_frame(&button->base, 40, 50, 240, 40);
-    g_status = UILabel_create(root);
-    UILabel_set_text(g_status, "Ready.");
-    UILabel_set_color(g_status, 0x555555);
-    UIView_set_frame(&g_status->base, 40, 95, 240, 20);
-    UIButton_on_click(button, on_button_click, g_status);
+    activity->button = UIButton_create(root);
+    UIButton_set_title(activity->button, "Tap me");
+    UIButton_set_title_color(activity->button, 0xFFFFFF);
+    UIButton_set_background_color(activity->button, 0x007AFF);
+    UIView_set_corner_radius(&activity->button->base, 8);
+    UIView_set_frame(&activity->button->base, 40, 50, 240, 40);
 
-    /* Switch */
-    UISwitch *sw = UISwitch_create(root);
-    UIView_set_position(&sw->base, 40, 125);
-    UISwitch_on_change(sw, on_switch_change, g_status);
+    activity->status = UILabel_create(root);
+    UILabel_set_text(activity->status, "Ready.");
+    UILabel_set_color(activity->status, 0x555555);
+    UIView_set_frame(&activity->status->base, 40, 95, 240, 20);
+    UIButton_on_click(activity->button, on_button_click, activity->status);
 
-    /* Slider + progress */
-    UISlider *slider = UISlider_create(root);
-    UISlider_set_range(slider, 0, 100);
-    UISlider_set_value(slider, 50);
-    UIView_set_frame(&slider->base, 40, 165, 240, 10);
+    activity->sw = UISwitch_create(root);
+    UIView_set_position(&activity->sw->base, 40, 125);
+    UISwitch_on_change(activity->sw, on_switch_change, activity->status);
 
-    UIProgressView *progress = UIProgressView_create(root);
-    UIProgressView_set_value(progress, 50);
-    UIProgressView_set_progress_color(progress, 0x34C759);
-    UIView_set_frame(&progress->base, 40, 185, 240, 8);
-    UISlider_on_change(slider, on_slider_change, progress);
+    activity->slider = UISlider_create(root);
+    UISlider_set_range(activity->slider, 0, 100);
+    UISlider_set_value(activity->slider, 50);
+    UIView_set_frame(&activity->slider->base, 40, 165, 240, 10);
 
-    /* Page control */
-    UIPageControl *pages = UIPageControl_create(root);
-    UIPageControl_set_page_count(pages, 3);
-    UIPageControl_set_current_page(pages, 1);
-    UIView_set_position(&pages->base, 110, 210);
+    activity->progress = UIProgressView_create(root);
+    UIProgressView_set_value(activity->progress, 50);
+    UIProgressView_set_progress_color(activity->progress, 0x34C759);
+    UIView_set_frame(&activity->progress->base, 40, 185, 240, 8);
+    UISlider_on_change(activity->slider, on_slider_change, activity->progress);
 
-    /* Text field */
-    UITextField *field = UITextField_create(root);
-    UITextField_set_placeholder(field, "Type here...");
-    UIView_set_frame(&field->base, 40, 130, 120, 30);
+    activity->pages = UIPageControl_create(root);
+    UIPageControl_set_page_count(activity->pages, 3);
+    UIPageControl_set_current_page(activity->pages, 1);
+    UIView_set_position(&activity->pages->base, 110, 210);
+
+    activity->field = UITextField_create(root);
+    UITextField_set_placeholder(activity->field, "Type here...");
+    UIView_set_frame(&activity->field->base, 40, 130, 120, 30);
+}
+
+static void demo_on_resume(UIViewController *controller)
+{
+    (void)controller;
+    printf("[DemoActivity] onResume\n");
+}
+
+static void demo_on_destroy(UIViewController *controller)
+{
+    DemoActivity *activity = (DemoActivity *)controller;
+    UITextField_destroy(activity->field);
+    UIPageControl_destroy(activity->pages);
+    UIProgressView_destroy(activity->progress);
+    UISlider_destroy(activity->slider);
+    UISwitch_destroy(activity->sw);
+    UILabel_destroy(activity->status);
+    UIButton_destroy(activity->button);
+    UILabel_destroy(activity->title);
+}
+
+static DemoActivity *demo_activity_create(void)
+{
+    DemoActivity *activity = UIKit_calloc(1, sizeof(DemoActivity));
+    if (!activity) {
+        return NULL;
+    }
+    UIViewController_init(&activity->base, NULL);
+    activity->base.load_view = demo_load_view;
+    activity->base.onCreate = demo_on_create;
+    activity->base.onResume = demo_on_resume;
+    activity->base.onDestroy = demo_on_destroy;
+    return activity;
 }
 
 /* ── Main ─────────────────────────────────────────────────────────────────── */
@@ -138,7 +186,18 @@ int main(void)
     setup_display();
 
     UIKit_init();
-    app_ui_init();
+
+    DemoActivity *activity = demo_activity_create();
+    if (!activity) {
+        printf("DemoActivity allocation failed.\n");
+        return 1;
+    }
+    UINavigationController *nav = UINavigationController_create(&activity->base);
+    if (!nav) {
+        UIViewController_destroy(&activity->base);
+        printf("UINavigationController_create failed.\n");
+        return 1;
+    }
 
     /* Main loop (host build: drive LVGL's tick manually) */
     for (int i = 0; i < 100; i++) {
@@ -146,6 +205,8 @@ int main(void)
         lv_timer_handler();
         UIKit_process();
     }
+
+    UINavigationController_destroy(nav);
 
     printf("UIKitDemo finished successfully.\n");
     return 0;

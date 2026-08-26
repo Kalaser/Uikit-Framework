@@ -6,9 +6,8 @@
 #include "../app_common.h"
 #include "../app_factory.h"
 
-class AppMenuViewController : public uikit::UIViewController {
+class AppMenuViewController : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
     void setApp(const AppDescriptor &app) { m_app = &app; }
 
     void onCreate() override {
@@ -54,9 +53,9 @@ public:
         m_open->setFrame(w / 2 - 110, 440, 100, 40);
         m_open->onClick([this](uikit::UIButton *) {
             if (m_nav && m_app) {
-                m_nav->pop();
-                launcher::schedule_delete(this);
-                m_nav->push(m_app->create(m_nav));
+                uikit::UIViewController *popped = finish();
+                launcher::schedule_delete(popped);
+                startActivity(m_app->create(m_nav));
             }
         });
 
@@ -68,8 +67,7 @@ public:
         m_close->setFrame(w / 2 + 10, 440, 100, 40);
         m_close->onClick([this](uikit::UIButton *) {
             if (m_nav) {
-                m_nav->pop();
-                launcher::schedule_delete(this);
+                launcher::schedule_delete(finish());
             }
         });
     }
@@ -85,7 +83,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     const AppDescriptor *m_app = nullptr;
     std::unique_ptr<uikit::UIView> m_card;
     std::unique_ptr<uikit::UILabel> m_icon;

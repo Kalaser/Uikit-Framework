@@ -13,6 +13,34 @@
 
 namespace launcher {
 
+/** Android-style page base for launcher apps.
+ *
+ * Each launcher page is an Activity-shaped UIViewController. The navigation
+ * controller acts as the task back-stack; startActivity() pushes a new page and
+ * finish() pops the current page, returning ownership to the caller.
+ */
+class Activity : public uikit::UIViewController {
+public:
+    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
+
+    void startActivity(uikit::UIViewController *controller)
+    {
+        if (m_nav && controller) {
+            m_nav->push(controller);
+        }
+    }
+
+    uikit::UIViewController *finish()
+    {
+        return m_nav ? m_nav->pop() : nullptr;
+    }
+
+protected:
+    uikit::UINavigationController *navigationController() const { return m_nav; }
+
+    uikit::UINavigationController *m_nav = nullptr;
+};
+
 /** Print a lifecycle log line. */
 inline void vc_log(const char *who, const char *cb)
 {
@@ -23,6 +51,9 @@ inline void vc_log(const char *who, const char *cb)
  *  so the click callback can return before the object is freed. */
 inline void schedule_delete(uikit::UIViewController *vc)
 {
+    if (!vc) {
+        return;
+    }
     lv_timer_create([](lv_timer_t *t) {
         auto *ctrl = static_cast<uikit::UIViewController *>(t->user_data);
         lv_timer_del(t);
@@ -34,7 +65,7 @@ inline void schedule_delete(uikit::UIViewController *vc)
 /** Build a "← Back" button that pops the controller and schedules its
  *  destruction. The returned button must be owned by the app controller
  *  (unique_ptr member) and released in onDestroy. */
-inline std::unique_ptr<uikit::UIButton> make_back(uikit::UIViewController *self,
+inline std::unique_ptr<uikit::UIButton> make_back(launcher::Activity *self,
                                                   uikit::UIView &parent,
                                                   uikit::UINavigationController *nav)
 {
@@ -51,9 +82,11 @@ inline std::unique_ptr<uikit::UIButton> make_back(uikit::UIViewController *self,
         lv_obj_set_style_text_font(lbl, launcher_theme::kFontCap, 0);
     }
     btn->onClick([self, nav](uikit::UIButton *) {
-        if (nav) {
-            nav->pop();
-            launcher::schedule_delete(self);
+        if (self && nav) {
+            uikit::UIViewController *popped = self->finish();
+            if (popped) {
+                launcher::schedule_delete(popped);
+            }
         }
     });
     return btn;
