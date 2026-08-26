@@ -92,17 +92,19 @@ bool UIView_is_hidden(UIView *view);
 
 /**
  * Add child as a subview of parent.
+ * Invalid hierarchy mutations (NULL inputs, self-parenting, or cycles) are ignored.
  */
 void UIView_add_subview(UIView *parent, UIView *child);
 
 /**
- * Remove the view from its superview.
+ * Remove the view from its superview. Root views are left unchanged.
  */
 void UIView_remove_from_superview(UIView *view);
 
 /**
  * Remove `child` from `parent` (equivalent to UIView_remove_from_superview
- * on the child; the child object itself is kept alive).
+ * on the child; the child object itself is kept alive). No-op if `child`
+ * is not currently attached to `parent`.
  */
 void UIView_remove_subview(UIView *parent, UIView *child);
 
