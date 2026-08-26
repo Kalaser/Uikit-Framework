@@ -6,8 +6,14 @@ project(uikit VERSION 0.3.0 LANGUAGES C CXX)
 option(UIKIT_BUILD_DEMO     "Build the demo application" ON)
 option(UIKIT_BUILD_TESTS    "Build the test suite"        ON)
 option(UIKIT_BUILD_EXAMPLES "Build the examples"          ON)
+option(UIKIT_BUILD_LAUNCHER "Build the Windows launcher application" ${WIN32})
 
 # ── LVGL ─────────────────────────────────────────────────────────────────────
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/third_party/lvgl/CMakeLists.txt")
+    message(FATAL_ERROR
+        "LVGL is unavailable. Fetch repository dependencies with: "
+        "git submodule update --init --recursive")
+endif()
 add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/lvgl ${CMAKE_BINARY_DIR}/lvgl)
 
 # ── UIKit library ────────────────────────────────────────────────────────────
@@ -89,7 +95,12 @@ if(UIKIT_BUILD_DEMO)
 endif()
 
 # ── Launcher app (Android-style desktop on Windows GDI) ──────────────────────
-if(WIN32)
+if(UIKIT_BUILD_LAUNCHER)
+    if(NOT WIN32)
+        message(FATAL_ERROR
+            "UIKitLauncher uses the Windows GDI driver. Configure with a Windows "
+            "toolchain, or set -DUIKIT_BUILD_LAUNCHER=OFF on non-Windows hosts.")
+    endif()
     # XML page compiler (route B): when Python is available the build
     # auto-regenerates the *_xml.c/h from res/pages/*.xml whenever the XML
     # changes (edit XML -> just `make`). Without Python, the checked-in
@@ -125,6 +136,7 @@ if(WIN32)
     add_executable(UIKitLauncher
         apps/launcher/launcher.cpp
         apps/launcher/app_common.h
+        apps/launcher/activity_registry.h
         apps/launcher/app_factory.h
         apps/launcher/app_registry.cpp
         apps/launcher/win_driver.h
@@ -154,6 +166,7 @@ if(WIN32)
         add_dependencies(UIKitLauncher xml_pages)
     endif()
     target_link_libraries(UIKitLauncher PRIVATE uikit lvgl user32 gdi32)
+    install(TARGETS UIKitLauncher RUNTIME DESTINATION bin)
 endif()
 
 # ── Tests ────────────────────────────────────────────────────────────────────
@@ -167,6 +180,16 @@ if(UIKIT_BUILD_TESTS)
     target_link_libraries(UIKitCppTests PRIVATE uikit lvgl)
     add_test(NAME UIKitCppTests COMMAND UIKitCppTests)
 endif()
+
+# ── Release package ──────────────────────────────────────────────────────────
+# On Windows, `cpack -G ZIP` produces a portable launcher archive containing
+# `bin/UIKitLauncher.exe`. The launcher only links against Windows system DLLs.
+set(CPACK_PACKAGE_NAME "UIKitLauncher")
+set(CPACK_PACKAGE_VENDOR "UIKit-Framework")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_FILE_NAME "UIKitLauncher-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}")
+set(CPACK_GENERATOR "ZIP")
+include(CPack)
 
 # ── Examples ─────────────────────────────────────────────────────────────────
 if(UIKIT_BUILD_EXAMPLES)

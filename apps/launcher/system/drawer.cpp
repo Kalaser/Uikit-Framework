@@ -59,7 +59,7 @@ public:
                     lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_LEFT, 0);
                 }
                 row->onClick([this, &app](uikit::UIButton *) {
-                    if (m_nav) startActivity(app.create(m_nav));
+                    if (m_nav) startActivity(launcher::Intent(app.id));
                 });
                 m_rows.push_back(std::move(row));
                 y += 60;

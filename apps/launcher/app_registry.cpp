@@ -5,6 +5,8 @@
 
 #include "app_factory.h"
 
+#include <cstdio>
+
 const AppDescriptor kLauncherApps[15] = {
     { "phone",   "Phone",   LV_SYMBOL_CALL,      0x34D399, "comms", phone_app_create },
     { "camera",  "Camera",  LV_SYMBOL_EYE_OPEN,  0x60A5FA, "media", camera_app_create },
@@ -41,3 +43,12 @@ const AppDescriptor *kLauncherDock[4] = {
     &kLauncherApps[1],  /* Camera */
     &kLauncherApps[12], /* Settings */
 };
+
+void launcher_register_app_activities(launcher::ActivityRegistry &registry)
+{
+    for (const AppDescriptor &app : kLauncherApps) {
+        if (!registry.registerActivity(app.id, app.create)) {
+            std::printf("[LauncherApplication] duplicate Activity: %s\n", app.id);
+        }
+    }
+}

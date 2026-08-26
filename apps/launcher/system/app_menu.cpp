@@ -55,7 +55,7 @@ public:
             if (m_nav && m_app) {
                 uikit::UIViewController *popped = finish();
                 launcher::schedule_delete(popped);
-                startActivity(m_app->create(m_nav));
+                startActivity(launcher::Intent(m_app->id));
             }
         });
 
