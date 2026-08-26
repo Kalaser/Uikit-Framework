@@ -36,6 +36,7 @@ LVGL becomes the rendering and input engine underneath the framework.
 | Core              | `uikit/core/`               | `UIView`, `UIViewRoot`, `UIEvent`, `UIKitResult` |
 | Components        | `uikit/components/`         | `UILabel`, `UIButton`, `UISwitch`, `UISlider`, `UITextField`, `UIImageView`, `UIScrollView`, `UIProgressView`, `UIPageControl` |
 | Controllers       | `uikit/controllers/`        | `UIViewController`, `UINavigationController` |
+| App lifecycle     | `docs/app-lifecycle.md`     | Application/Activity design, page ownership, navigation transitions |
 | Graphics          | `uikit/graphics/`           | `UITheme`, `UIViewAnimation`           |
 | Layout            | `uikit/layout/`             | `UIStackView`                          |
 | Platform          | `uikit/platform/`           | `UIKitPlatform` (time/memory/lock/dispatch) |
@@ -81,11 +82,10 @@ do not duplicate LVGL registrations.
 ## Controller lifecycle
 
 ```text
-create → loadView → viewWillAppear → viewDidAppear → ACTIVE
-        → viewWillDisappear → viewDidDisappear → destroy
+None → Created → Started → Resumed ⇄ Paused → Stopped → Destroyed
 ```
 
-`UINavigationController` drives these hooks on push/pop/pop-to-root.
+Use `UIViewController` as the page/Activity lifecycle object and `UINavigationController` as the task back-stack. `UINavigationController` drives these hooks on push/pop/pop-to-root. See `docs/app-lifecycle.md` for the standard Application/Activity design.
 Ownership rules:
 
 - **Push** transfers controller ownership to the navigation controller.

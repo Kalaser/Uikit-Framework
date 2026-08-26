@@ -19,6 +19,18 @@ static UIEventType translate_lvgl_event(lv_event_code_t code)
     }
 }
 
+static void lvgl_delete_handler(lv_event_t *lv_event)
+{
+    UIView *view = lv_event_get_user_data(lv_event);
+    if (!view) {
+        return;
+    }
+
+    view->lv_obj = NULL;
+    view->superview = NULL;
+    view->registered_events = 0;
+}
+
 static void lvgl_event_handler(lv_event_t *lv_event)
 {
     UIView *view = lv_event_get_user_data(lv_event);
@@ -110,6 +122,9 @@ UIView *UIView_create(UIView *parent)
     view->superview  = parent;
     view->callbacks  = NULL;
     view->tag        = NULL;
+
+    /* Keep the wrapper safe if LVGL deletes this object through a parent. */
+    lv_obj_add_event_cb(view->lv_obj, lvgl_delete_handler, LV_EVENT_DELETE, view);
 
     return view;
 }
@@ -208,26 +223,41 @@ bool UIView_is_hidden(UIView *view)
 
 void UIView_add_subview(UIView *parent, UIView *child)
 {
-    if (!parent || !child || !parent->lv_obj || !child->lv_obj) {
+    if (!parent || !child || parent == child || !parent->lv_obj || !child->lv_obj) {
         return;
     }
+
+    for (UIView *ancestor = parent; ancestor; ancestor = ancestor->superview) {
+        if (ancestor == child) {
+            return;
+        }
+    }
+
     lv_obj_set_parent(child->lv_obj, parent->lv_obj);
     child->superview = parent;
 }
 
 void UIView_remove_from_superview(UIView *view)
 {
-    if (!view || !view->lv_obj) {
+    if (!view || !view->lv_obj || !view->superview) {
         return;
     }
+
+    lv_obj_t *screen = lv_scr_act();
+    if (!screen) {
+        return;
+    }
+
     /* Move to the active screen as a temporary parent */
-    lv_obj_set_parent(view->lv_obj, lv_scr_act());
+    lv_obj_set_parent(view->lv_obj, screen);
     view->superview = NULL;
 }
 
 void UIView_remove_subview(UIView *parent, UIView *child)
 {
-    (void)parent;
+    if (!parent || !child || child->superview != parent) {
+        return;
+    }
     UIView_remove_from_superview(child);
 }
 

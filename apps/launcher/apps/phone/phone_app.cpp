@@ -9,10 +9,8 @@
 #include "../../app_factory.h"
 #include <string>
 
-class PhoneApp : public uikit::UIViewController {
+class PhoneApp : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
-
     void onCreate() override {
         launcher::vc_log("Phone", "onCreate");
         auto v = getView();
@@ -98,7 +96,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     std::unique_ptr<uikit::UILabel> m_title;
     std::unique_ptr<uikit::UIButton> m_back;
     std::unique_ptr<uikit::UILabel> m_number;

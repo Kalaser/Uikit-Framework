@@ -5,10 +5,8 @@
 #include "../../app_common.h"
 #include "../../app_factory.h"
 
-class CalcApp : public uikit::UIViewController {
+class CalcApp : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
-
     void onCreate() override {
         launcher::vc_log("Calc", "onCreate");
         auto v = getView();
@@ -58,7 +56,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     std::unique_ptr<uikit::UIButton> m_back;
     std::unique_ptr<uikit::UILabel> m_display;
     std::vector<std::unique_ptr<uikit::UIButton>> m_pad;

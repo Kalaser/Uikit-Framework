@@ -5,10 +5,8 @@
 #include "../../app_common.h"
 #include "../../app_factory.h"
 
-class VideoApp : public uikit::UIViewController {
+class VideoApp : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
-
     void onCreate() override {
         launcher::vc_log("Video", "onCreate");
         auto v = getView();
@@ -75,7 +73,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     std::unique_ptr<uikit::UIButton> m_back;
     std::unique_ptr<uikit::UIView> m_surface;
     std::unique_ptr<uikit::UILabel> m_title;

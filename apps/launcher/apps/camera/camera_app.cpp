@@ -5,10 +5,8 @@
 #include "../../app_common.h"
 #include "../../app_factory.h"
 
-class CameraApp : public uikit::UIViewController {
+class CameraApp : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
-
     void onCreate() override {
         launcher::vc_log("Camera", "onCreate");
         auto v = getView();
@@ -76,7 +74,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     std::unique_ptr<uikit::UIButton> m_back;
     std::unique_ptr<uikit::UIView> m_viewfinder;
     std::vector<std::unique_ptr<uikit::UIView>> m_lines;

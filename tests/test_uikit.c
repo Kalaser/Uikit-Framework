@@ -103,11 +103,40 @@ static void test_uiview_visibility_hierarchy(void)
     UIView_add_subview(parent, child);
     assert(UIView_get_superview(child) == parent);
 
+    /* Invalid hierarchy mutations must be ignored. */
+    UIView_add_subview(child, parent);
+    assert(UIView_get_superview(parent) == NULL);
+    UIView_add_subview(child, child);
+    assert(UIView_get_superview(child) == parent);
+
+    UIView *unrelated = UIView_create(NULL);
+    assert(unrelated != NULL);
+    UIView_remove_subview(unrelated, child);
+    assert(UIView_get_superview(child) == parent);
+
+    UIView_remove_subview(parent, child);
+    assert(UIView_get_superview(child) == NULL);
     UIView_remove_from_superview(child);
     assert(UIView_get_superview(child) == NULL);
 
+    UIView_destroy(unrelated);
     UIView_destroy(child);
     UIView_destroy(parent);
+}
+
+static void test_uiview_parent_destroy_invalidates_child_native_handle(void)
+{
+    UIView *parent = UIView_create(NULL);
+    UIView *child  = UIView_create(parent);
+    assert(parent && child);
+
+    UIView_destroy(parent);
+
+    assert(UIView_native(child) == NULL);
+    assert(UIView_get_superview(child) == NULL);
+
+    /* Must not double-delete the LVGL child object already deleted by parent. */
+    UIView_destroy(child);
 }
 
 static void test_uiview_tag(void)
@@ -749,6 +778,7 @@ int main(void)
     RUN_TEST(test_uiview_frame);
     RUN_TEST(test_uiview_appearance);
     RUN_TEST(test_uiview_visibility_hierarchy);
+    RUN_TEST(test_uiview_parent_destroy_invalidates_child_native_handle);
     RUN_TEST(test_uiview_tag);
     RUN_TEST(test_uiview_callbacks);
 

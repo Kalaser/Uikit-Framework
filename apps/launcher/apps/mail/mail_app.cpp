@@ -5,10 +5,8 @@
 #include "../../app_common.h"
 #include "../../app_factory.h"
 
-class MailApp : public uikit::UIViewController {
+class MailApp : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
-
     void onCreate() override {
         launcher::vc_log("Mail", "onCreate");
         auto v = getView();
@@ -64,7 +62,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     std::unique_ptr<uikit::UILabel> m_title;
     std::unique_ptr<uikit::UIButton> m_back;
     std::vector<std::unique_ptr<uikit::UIButton>> m_rows;

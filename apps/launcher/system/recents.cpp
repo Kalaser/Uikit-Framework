@@ -7,9 +7,8 @@
 #include "../app_factory.h"
 #include <vector>
 
-class RecentsViewController : public uikit::UIViewController {
+class RecentsViewController : public launcher::Activity {
 public:
-    void setNav(uikit::UINavigationController *nav) { m_nav = nav; }
     void setRecents(const std::vector<const AppDescriptor *> &recents) { m_recents = recents; }
 
     void onCreate() override {
@@ -56,7 +55,7 @@ public:
                 lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_LEFT, 0);
             }
             card->onClick([this, app](uikit::UIButton *) {
-                if (m_nav) m_nav->push(app->create(m_nav));
+                if (m_nav) startActivity(app->create(m_nav));
             });
             m_cards.push_back(std::move(card));
             y += 76;
@@ -73,7 +72,6 @@ public:
     }
 
 private:
-    uikit::UINavigationController *m_nav = nullptr;
     std::vector<const AppDescriptor *> m_recents;
     std::unique_ptr<uikit::UILabel> m_title;
     std::unique_ptr<uikit::UIButton> m_back;
